@@ -6,8 +6,6 @@ My bachelor's thesis at DHBW Stuttgart, written with the Systems Architecture La
 
 **What I built:** a bare-metal Kubernetes cluster that runs a fleet of [Arkouda](https://github.com/Bears-R-Us/arkouda) workers, plus a Jupyter notebook server that talks to them directly. Arkouda is a Python and Chapel framework for parallel data analysis. The prototype extends Pachykouda, the GitOps pipeline system from my earlier project paper, so users can explore data interactively instead of going through the pipeline.
 
-**A result I like:** multi-stage builds shrank the Arkouda container image from 2.86 GB to 710 MB. That cut the median cold start of a worker from 63.5 to 19.7 seconds, a 69% reduction.
-
 ## Contents
 
 - [`Paper/thesis.pdf`](Paper/thesis.pdf): the thesis as graded.
