@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: compute-benchmark
+  labels: 
+    app: compute-benchmark
+  namespace: arkouda
+spec:
+  containers:
+    - name: compute-benchmark
+      image: node20.lab.example:31320/benchmark:3ak24.3ch2
+      imagePullPolicy: Always
+      resources:
+        limits:
+          memory: "64Gi"
+          cpu: "4"
+      command: ["bash", "/opt/benchmark.sh"]
+      env: 
+        - name: TEST_SIZE_BEGINNING
+          value: "2"
+        - name: TEST_SIZE_END
+          value: "8"
+        - name: TEST_SIZE_INCREMENT
+          value: "1"
+        - name: ARKOUDA_CLIENT_TIMEOUT
+          value: "600"

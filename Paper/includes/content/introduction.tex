@@ -1,0 +1,85 @@
+\chapter{Introduction}
+\label{Introduction}
+
+This section clarifies the circumstances and the motivation for the following research,
+which problems are addressed, how we address them and what was achieved.
+
+\section{Motivation}
+
+The \ac{HPC} community and the \ac{CC} community have traditionally operated in separate worlds,
+with the \ac{HPC} community focusing on raw performance and the \ac{CC} community focusing on convenience, flexibility, and reliability.
+But with the rise of \ac{CC} systems to run a significant portion of the computation workloads of the Internet,
+and a mature ecosystem that rivals the compute power of traditional \ac{HPC} systems,
+both communities have realized the potential of combining the best of both worlds.
+
+% Especially in the field of \ac{AI} and \ac{ML}, where increasingly large systems are needed for training large models,
+% innovative solutions are being created to run these workloads directly on \ac{CC} systems.
+% The recent acquisition of \texttt{Pachyderm} by \texttt{HPE} is an example of 
+% one of the leading \ac{HPC} vendors sees the potential of combining the two worlds\footcite{nahrenkhizeranHewlettPackardEnterprise}.
+% [Note from Harumi: Pachyderm is not an HPC system.]
+% Correction:
+Especially in the field of \ac{AI} and \ac{ML}, where increasingly large systems are needed for training large models,
+innovative solutions are being created to run these workloads directly on \ac{CC} systems.
+The recent acquisition of \texttt{Pachyderm} by \texttt{HPE} is an example of how one of the leading \ac{HPC} vendors
+sees the potential benefits of \ac{CC} systems which can be used to schedule and run Big Data workloads in a
+scalable and scheduled manner\footcite{nahrenkhizeranHewlettPackardEnterprise}.
+
+% Within the \texttt{Hewlett Packard Labs - Systems Architecture Lab} a research project was started 
+% to investigate the potential of just the workloads themselves but features of the \ac{CC} ecosystem to the \ac{HPC} world as well.
+% [Note from Harumi: I think it is the other way round -- bringing CC turnkey convenience to HPC] 
+% Correction: (Honeslty I think the original sentence was quite confusing in general)
+Within the \texttt{Hewlett Packard Labs - Systems Architecture Lab} a research project was started in order
+to investigate the potential of bringing the flexibility and convenience of the \ac{CC} ecosystem to the \ac{HPC} world.
+While the \texttt{Pachykouda} project has successfully shown that the integration of the workflow management system \texttt{Pachyderm}
+and the highly parallel compute framework \texttt{Arkouda} is possible, further research was needed.
+
+The existing solution is based on a \gls{GitOps} approach, defining workflows, building containers and deploying them to the Kubernetes cluster,
+based on the changes in a Git repository. While this approach is highly reliable and ensures reproducibility of the results,
+it is limited by its static nature and a high latency between changes made and the deployment of the new workflow.
+This latency prevents the system from being used in an interactive manner, as the user has to wait for the deployment to finish before the results can be seen.
+
+The goal of this research project is not to replace the existing solution, but to extend the system with a new interactive way of
+submitting jobs to the \ac{CC} system, allowing the user to interact with the system in real-time and get immediate feedback on the results,
+without incurring the initial latency of the deployment, the build and deployment steps of the \gls{GitOps} approach.
+
+\section{Problem Statement}
+\label{ProblemStatement}
+
+While low latency high performance computing has been a focus of the \ac{HPC} as well as the \ac{CC} community,
+resulting in systems such as \texttt{JupyterHub} or \texttt{Dask}, these systems are inherently ephemeral and do not provide a way to reproduce results on a \ac{HPC} scale.
+Therefore, we need to solve the following problems:
+
+\begin{itemize}
+    \item \textbf{P1:} \textit{The \gls{GitOps} first approach with introduces a latency between the changes made and the deployment of the new workflow.
+              This latency prevents a real-time explorative workflow and limits the usability for the interactive \iffalse [Note from Harumi: do you mean interactive?] [Response from Jon: Yes :D] \fi exploration of the data.
+          }
+    \item \textbf{P2:} \textit{Existing solutions for interactive workloads are focusing on the convenience and flexibility of \ac{CC} systems,
+              but do not provide a build in way to be combined with an automatic reproducible orchestration system for \ac{HPC} scale workloads.
+          }
+\end{itemize}
+
+\section{Research Questions}
+Based on these needs and problems the following questions need to be answered:
+
+\begin{itemize}
+    \item \textbf{RQ1:} \textit{
+              How can the system be extended to allow for a real-time explorative workflow, allowing for an interactive exploration of \ac{HPC} scale data?
+          }
+    \item \textbf{RQ2:} \textit{
+              How can such a system be designed to combine the performance of \ac{HPC} with the flexibility and convenience of \ac{CC} systems?
+          }
+
+\end{itemize}
+
+
+\section{Contributions}
+
+By way of this research the following results were achieved:
+
+\begin{itemize}
+    \item \textbf{C1:} \textit{ A deductive analysis of the three intersecting fields of \ac{HPC}, \ac{CC} and \ac{EC} }
+    \item \textbf{C2:} \textit{ An abstraction of these fields into a conceptual solution for the problem at hand}
+    \item \textbf{C3:} \textit{ A practical implementation of the conceptual solution showing the feasibility of the approach, where the deductive analysis and the conceptual solution are used as a guideline and are validated by the practical implementation.}
+\end{itemize}
+
+\pagebreak

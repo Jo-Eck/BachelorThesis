@@ -1,0 +1,32 @@
+# Default values for arkouda-udp-locale chart
+
+######################## Pod Settings ########################
+
+imageRepository: node20.lab.example:31320
+releaseVersion: 2ak24.3ch2 
+imagePullPolicy: Always
+
+resources:
+  limits:
+    cpu: 44000m
+    memory: 220Gi
+  requests:
+    cpu:  40000m
+    memory: 200Gi
+
+################ Arkouda Locale Configuration ################
+
+server: 
+  port:  # Arkouda port, defaults to 5555
+  memTrack: true # needs to be true to enable memory metrics and memory use forecasting 
+  numLocales: 3 # number of arkouda-udp-locale pods
+  threadsPerLocale: 44 # number of CPU cores for each locale
+external:
+  persistence: 
+    enabled: false
+    path: /arkouda-files # pod directory path, must match arkouda-udp-locale
+    hostPath: /mnt/arkouda  # host machine path, must match arkouda-udp-locale
+secrets:
+  tls: arkouda-tls # name of tls secret used to access Kubernetes API
+  ssh: arkouda-ssh # name of ssh secret used to launch Arkouda locales
+

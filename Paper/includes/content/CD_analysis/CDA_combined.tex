@@ -1,0 +1,405 @@
+% \section{Combined Conceptual Deductive Analysis}
+\section{Deductive Design of Conceptual Architecture}
+
+Based on the deep knowledge gained by the previous sections,
+it is now possible to create a combined conceptual approach to address the issues
+described in the \nameref{Introduction} and the \nameref{ProblemStatement} sections.
+This approach will be used as a guideline for the prototype implementation int the chapter \nameref{ArtifactDevelopment}.
+
+In contrast to the sections above which went from the basic principles towards the higher levels of abstraction,
+this chapter will start at the high level goals, their implications and what will be needed on the lower levels
+in order to accomplish these goals.
+
+\subsection{Goals}
+\label{sec:goals}
+
+Based on the \nameref{ProblemStatement}, the goals of the system can be summarized as follows:
+
+% Original problem statement:
+% While low latency high performance computing has been a focus of the HPC as well as the
+% CC community, resulting in systems such as JupyterHub or Dask, these systems are inherently
+% ephemeral and do not provide a way to reproduce results on a HPC scale. Therefore we need to
+% solve the following problems:
+% • P1: The GitOps first approach with introduces a latency between the changes made and
+% the deployment of the new workflow. This latency prevents a real-time exploitive workflow
+% and limits the usability for the interactive exploration of the data.
+% • P2: Existing solutions for interactive workloads are inherently ephemeral and do not pro-
+% vide a way to reproduce the results on a HPC scale
+
+
+The designed system should provide the user with an easy-to-use interface,
+capable of interactively exploring \ac{HPC} scale data.
+The system should be able to run on cloud infrastructure, be able
+to allocate the necessary resources, as well as scheduling and executing
+the computation within a reasonable time frame.
+
+% Yeah honestly it was not realistic to expect that I would be able to build a system which 
+% could run HPC on the cloud just like that, while also seamlessly autoscaling and being cheap lol
+% considering that this needed to be done within two months while writing this thesis at the same time.
+% I got so close tho :(
+
+% Commented out as this is not just unrealistic, but misses the original problem statement:
+% On the highest level, we want a system which provides the user with a 
+% computational notebook, which is able to execute \ac{HPC} scale computations seamlessly on cloud infrastructure.
+% The system should be able to automatically provide the necessary resources on demand
+% and in a reasonably cost effective way.
+
+% Notes: its a given that it is supposed to run on cc infr??
+% what would the advantages even be about it running on cloud infrastructure in the first place?
+
+\subsection{Implications}
+
+In order to achieve the goals, the system must be able to manage the following aspects, in order of abstraction:
+
+\begin{itemize}
+    \item \textbf{Programming Language Support:} in order to enable \ac{HPC} scale computation for the user,
+          the programming language must support parallel computation natively, or at least provide a library which does.
+          As programming languages such as Python are not natively able to support parallel computation paradigms
+          such as described in the \nameref{sec:programming_models} section.
+          The language must not just support parallel computation, but also be user-friendly in order to let the user focus on
+          exploring the data and not spend their time on the intricacies of parallel computation.
+    \item \textbf{Notebook Environment:} The system should support a Notebook environment, allowing users to
+          facilitate the communication between the client and the compute cluster, requiring an endpoint being able to submit
+          the code to the cluster and receive the results.
+    \item \textbf{Compute Cluster:} The system must be able to schedule and execute the computation within a reasonable time frame.
+          Requiring a system capable of managing the resources and scheduling the computation.
+    \item \textbf{Platform Agnostic:} As the system is supposed to run on cloud infrastructure,
+          whether it is on-premise or in the cloud, the system must be able to run cloud natively.
+\end{itemize}
+
+
+\subsection{Suggested Architecture}
+\label{suggested_architecture}
+
+Based on the requirements outlined above a hypothetical software can be suggested
+to fulfill the requirements. While the implementation of this in the following chapter will additionally
+constrain by the available resources and time frame here we can outline a system which
+is not limited by these circumstances.
+
+\subsubsection{Service Layer Architecture}
+
+This section will cover the highest level of abstraction,
+the service layer architecture, which will be the most important part of the system for the user.
+
+\textbf{Client}
+\label{asp:client}
+
+With the usage of a Compute Notebook being an essential part of exploratory data analysis,
+and as discussed in the \nameref{sec:EC} section, Jupyter Notebook is the most popular choice
+and will bring a familiar interface to scientists and domain experts, who had little experience with \ac{HPC} before.
+
+In  this case we will make use of the Jupyter Server Client architecture,
+having the user only run the client locally while the server will be running on the cloud infrastructure.
+
+\textbf{Language}
+\label{asp:language}
+
+The language of choice is \textit{Arkouda}, a highly parallel framework for python,
+specifically build for enabling data scientists to perform parallel computation on terrascale \ac{HPC} systems on a high level of abstraction
+and interactive speeds\footcite{enthoughtArkoudaTerascaleData2020}.
+
+It is build on top of the \textit{Chapel} programming language, which itself is a parallel programming language
+specifically designed on \ac{HPC} systems, and instead of being a set of libraries on top of a general purpose language
+it is build from the ground up to work on \ac{PGAS} systems, which is a perfect fit for the use case of this system as
+will be discussed later on in the \nameref{sec:suggarch_network} section.
+
+Another option could be \ac{MPI}, as it is almost as user-friendly as Python,
+but as Python is a more popular language and is more user-friendly, it would be a better fit for the system.
+
+% - Python a quite popular programming language not just with data scientist but also domain experts.
+% - Needs to support parallel computation, as the language itself does not support it natively
+%   - therefore the arkouda ?dialect? is used as it is especially greared towards this kind of computation.
+%   - uses a chapel interpreter to execute the code and to make use of distibuted compute hardware
+
+\textbf{Cluster}
+\label{asp:cluster}
+
+While the development of containers was primarily driven by \ac{CC} needs and those two subjects
+how become tightly linked, \ac{CC} is much more than just containers.
+Complete \ac{CC} systems such as \textit{OpenStack} don't limit themselves to just containers,
+but also provide virtual machines as well as bare metal provisioning to provide compute resources\footcite{jacksonOpenStackCloudComputing2013}.
+
+For the reasons discussed in the \nameref{sec:Cloud_Computing} section, virtualization is not a good fit,
+as in the best case we would still emulate a full operating system, which would be a huge overhead.
+
+Bare metal, which is the practice of simply foregoing any kind of virtualization or containerization
+and just running the code on the hardware itself, at the cost of not being able to subdivide the resources of a node\footcite{canonicalMetalService}.
+This is done by creating a custom operating system image which is installed via a network boot.
+This means that provisioning a new node is extremely slow in comparison to starting an isolated container,
+but also ensures 100\% of the resources are available to the user and no overhead is introduced by the virtualization layer.
+The specific use case this could fit is if the entire nodes compute resources would be taken up by a single service
+anyhow but most importantly the resource demand is very stable and predictable.
+
+While the former is true and would make a compelling case for the compute-nodes,
+but especially in the context of exploratory computation the resource demands are highly dependent on the user
+and can change rapidly, which would make the latter a bad fit for the system.
+
+The best fit for the use case is a container based system, as spawning containers is as fast as starting a new process,
+while bringing isolation, resource subdivision and a rich ecosystem of tools and libraries to the table.
+
+This cluster will be hosting the entire system, from the compute services doing our \ac{HPC} computation,
+to the exposed services such as the Jupyter Server, which will be able to communicate with the client.
+
+% - Kubernetes as a container orchestration system vs swarm
+% - talk about how KVM could also be used, but with the drawback of beings slower to provision and have a higher overhead
+% - also a hardware provisioning system could be used such as OpenStack but this is not just much slower
+% but also prevents a secure way of sharing the resources between mutlitple users and is a much less flexible system
+
+
+\textbf{Jupyter Server}
+\label{asp:jupyter_server}
+
+The Jupyter Server web application will be running on the cluster being the developers access point to the system.
+It will be able to communicate with the client, submit the code to the compute cluster and request the necessary resources.
+
+While there is also a multi-user Jupyter Server called JupyterHub, which allows multiple users to share the same server, we will still be using the single user instance\footcite{jupyterhub-docsJupyterHub}.
+If more than one user wants to use the system at a given time, instead of sharing the same environment they each will get their very own
+complete environment, which will be spawned on demand and destroyed after the user is done with it.
+This will ensure not just a clean environment but also prevent any kind of interference between the users.
+
+At least one Jupyter Server will always be running on the cluster, ready to accept new connections from the client.
+
+
+\textbf{Compute Services}
+\label{asp:compute_services}
+
+Now that the user interface and its functionality have been discussed, the next step is to examine the compute services.
+These services are responsible for executing the code submitted by the user on the compute nodes.
+As we have already discussed, the language of choice is Arkouda.
+It is specifically designed for enabling interactive programming and parallel computation.
+Arkouda splits the computation from the developer's machine to the compute nodes,
+allowing for efficient and scalable processing.
+Its infrastructure is split into three parts\footcite{arkouda-docsStartupArkoudaDocumentation}:
+
+
+\begin{itemize}
+    \item \textbf{Client:} This can be any python interpreter running on the users machine, which will be able to communicate with the server.
+    \item \textbf{Server:} This is the bootstrap server, it is the entry point for the client and bootstraps the multi-locale cluster.
+    \item \textbf{Locales:} These are the workers, at least one of then will be running on each node that contributes to the computation.
+\end{itemize}
+
+For the system to be build, both the server and an arbitrary amount of locales will be running on the cluster,
+with the server establishing the initial connection to the locales through \ac{SSH}, setting up
+the communication in order to set up the \ac{PGAS} space.
+
+The server will be on standby until a connection request is made by a client and will then submit the
+processing request to the locales through the interconnect.
+
+\textbf{Resource Provisioning / Scaling}
+\label{asp:resource_provisioning}
+
+While in traditional \ac{HPC} systems the resources are statically allocated and the user has to request the resources beforehand in order to be scheduled,
+the system we are building is supposed to be more dynamic and able to scale the resources on demand.
+Similarly to the time google initially developed the Borg system in order to handle both their services as
+well as their batch jobs, as described in the \nameref{sec:orchestration} section, it is to be expected
+that this system  might simultaneously handle other services as well as interactive computation,
+in order to make the best use of the hardware invest.
+
+While an ideal solution would be able to scale the available resources for each single submission of a code cell,
+the way the Arkouda system is designed, the size of available nodes needs to be known beforehand.
+This is due to the fact that it relies on the \ac{PGAS} model (see \nameref{sec:gasnet}) which requires
+the memory to be shared between the nodes, if we now started to add or remove nodes during the computation
+the memory space would need to be resized each time which would come with a large overhead.
+A possible solution to this problem could be the use of a system such as \ac{FAM} which is able to provide an external memory space
+which is able to survive program termination and is made as a shared memory space between the nodes\footcite{keetonOpenFAMAPIProgramming2019a}.
+
+An alternative approach could be to work on the scale of a session instead of a single code cell,
+where the user would be provided with a fixed amount of resources for the entire session,
+depending on the utilization of the system, the user could be provided with more or less resources.
+This would be a more stable approach, as the user would not be interrupted by the system scaling up or down,
+but would also not be able to make use of the full potential of the system.
+
+Depending on circumstances, another factor in this case could be Kubernetes ability to
+over provision resources.
+Over provisioning in this case means that while one node is technically bound up in a session,
+it could still be used by a different session, while the cores are sitting idle.
+In classical \ac{HPC} systems this would not be possible as the compute request
+has been scheduled long before, but as exploitive computing is inherently burst,
+sitting idle while the user is thinking or writing code, these nodes could be used by other users.
+But this system is inherently a trade-off between the user experience and the utilization of the system and
+depends entirely on the specific use case.
+
+\subsubsection{Cluster Level Architecture}
+
+This section will cover the lower level of the system architecture,
+the sections which are not directly visible to the user but are essential for the system to work.
+
+\textbf{Operating System}
+\label{asp:operating_system}
+
+Using containerization as the main method of resources isolation makes the
+choice of Linux as a base an imperative.
+As discussed in the section \nameref{fig:containerization} containers are
+build around features specifically created in the Linux kernel.
+While other operating systems do technically support some form of containerization,
+either through creating a Linux virtual machine or creating
+a custom containerization system, these are not as mature as the Linux based solutions
+\footcite{mcgrathServerlessComputingDesign2017}.
+Aside from specific feature support regarding containers,
+Linux has become the de facto standard for \ac{HPC} systems (\ref{sec:operating_systems})
+as well as cloud infrastructure \footcite{stevenvaughan-nicholsCanInternetExist},
+due to its open source nature and the ability to customize it to the specific needs of the industry.
+
+While the choice of operating system is clear, the choice of which \gls{distribution} is much less so.
+Essentially there are four kinds of distributions which could be used,
+while they will have little functional difference for the system build on top of them,
+as containerization abstracts the underlying system away, they will have a large impact on the maintainability of the system,
+the availability of support and the ease of development of the system itself.
+
+\begin{itemize}
+    \item \textbf{Cloud Managed Distributions:} The large hyperscalers such as AWS\footcite{awsOpenSourceKubernetesVerteilungAmazonEKSVerteilungAmazon}, Google Cloud\footcite{googleNodeImagesGoogle}
+          or Azure\footcite{burtMicrosoftAzureLinux} all provide their own distributions within their cloud environments, which are specifically tailored to their needs.
+          These are specifically geared towards the cloud environment and are not meant to be used outside it.
+    \item \textbf{Enterprise Distributions:} These are distributions which are specifically tailored to the needs of the enterprise customers,
+          running their own data centers. They provide a fully featured out-of-the-box solution, with professional support and a large ecosystem of tools.
+          Examples of this are \textit{Red Hat OpenShift}\footcite{redhatRedHatOpenShift} or \textit{VM Ware Tanzu Kubernetes Grid} \footcite{vmwareVMwareTanzuKubernetes2020}.
+          These systems are costly but provide a high level of support and are specifically tailored towards a specific way of administration.
+    \item \textbf{Specific \ac{FOSS} Distributions:} These are distributions which are build around the idea of being open source and free to use
+          and are extendable by the user. Examples of this are \textit{Suses Rancher}\footcite{rancherInnovateEverywhere} or the community edition of \textit{OpenShift} called \textit{okd} \footcite{innesOKDIo}.
+          While some offer a professional support option, they can be used and extended by the user as they see fit.
+    \item \textbf{Generic \ac{FOSS} Distributions:} These are distributions which are not specifically tailored towards any specific use case, but as the features of
+          kubernetes are build around the kernel which is shared by all distributions, they can be used as well.
+          But will require a manual installation of the necessary software and will not have any kind of professional support. This includes distributions such as \textit{Debian}\footcite{debianDebianUniversalOperating} or \textit{Ubuntu}\footcite{canonicalGetUbuntuServer}.
+\end{itemize}
+
+As the system we will be building is going to be highly specific and will be running software which is out of the ordinary,
+from a cloud infrastructure perspective, the utility of outside support might be limited and the flexibility of the system might be more important.
+Therefore, the choice between a generic \ac{FOSS} distribution or a specific \ac{FOSS} distribution depends on factors such as the need for ready-made integrations and GUIs,
+as well as the administrators' familiarity with different systems.
+In this case, a Linux-based operating system would be the most suitable choice.
+
+% as containers as described are based around the Linux kernel specifically.
+
+% Disussion of dedicated Containeroriented os vs gernric linux distro
+% but anywhow one with professional support.
+% Opensift? Rancher? 
+
+% Or debian with manual installation.
+
+\textbf{Container Runtime}
+\label{asp:container_runtime}
+
+The choice of container runtime is a crucial one, as the container runtime is the software doing the "containerizatoin" --
+the isolation of the resources, the bootstrapping of the container and the execution of the code as described in the \nameref{sec:containerization} section.
+The \ac{CNCF} recognizes 19 different container runtimes \footcite{cncf[cloudnativecomputingfoundation]CNCFLandscape},
+the most relevant in our case are \textit{containerd}, \textit{\ac{CRI-O}} and \textit{singularity}.
+\textit{containerd} is the runtime used by docker, which has a high market share and is well known,
+due to it being the one of the first container runtime to be widely adopted both of the others are improvements or specializations of it.
+
+\textit{\ac{CRI-O}} is a lightweight container runtime specifically designed for Kubernetes and is build around the \ac{OCI} standard,
+being more streamlined towards large scale \ac{CC} systems\footcite{crioCrioCrio2024} but for the application of this system would
+work mostly interchangeably with \textit{containerd}.
+
+\textit{Singularity} on the other hand is a container runtime specifically designed for \ac{HPC} systems\footcite{singularity-docsIntroductionSingularitySingularity},
+which are trying to run as close to the metal as possible, and to support the specific needs of \ac{HPC} systems
+such as direct access to external accelerators such as \ac{GPU}s and \ac{FPGA}s, support for \ac{HPC} specific interconnects\footcite{uni.luULHPCTutorial} (see \ref{sec:networking_interconnects}) and the ability to run
+in \gls{rootless} mode\footcite{singularity-docsFakerootFeatureSingularity}.
+
+
+\textbf{Container Image}
+\label{sec:container_image}
+
+The container image will be an extension of the base image which
+can be fund in the  Arkouda repo \footcite{arkouda-repoArkoudacontribArkoudadockerMain},
+which itself is based upon the chapel container image \footcite{chapelChapelProfileDocker}.
+It makes chapel and Arkouda available to be used in a containerized environment.
+
+
+% \textbf{Scheduling System}
+\textbf{Network Abstraction}
+\label{asp:network_abstraction}
+
+The network abstraction layer creates a homogenous network between the different containers even if they are running on different nodes
+This makes the code running in the containers much easier to scale, manage and write.
+This can become quite complex involving multiple layers of abstraction and
+nested protocols such as described in the \nameref{sec:K8sNetworking} section.
+
+But while these systems make the network much easier to manage,
+they are a trade-off between usability and performance, as the layers of abstraction
+such as \ac{VXLAN} encapsulation or \ac{IP} in \ac{IP} tunneling come with a performance overhead.
+While this overhead is negligible for most use cases,
+in \ac{HPC} systems where the network is the bottleneck it can be a significant factor.
+
+While the most common network overlays in Kubernetes such as \textit{Flannel} and \textit{Calico},
+support both \ac{VXLAN} and \ac{IP} in \ac{IP} tunneling\footcite{tigeraOverlayNetworkingCalico}, as this is needed to communicated
+across subnets in a cloud environment, but for performance reasons
+they also support foregoing a virtual network and using the physical network directly\footcite{flannel-repoFlannelDocumentationBackends}
+
+But as Arkouda and many other \ac{HPC} systems are build around the \ac{RDMA} as an available feature,
+we also need an available network which supports \ac{RDMA} as well. This can be
+done by creating an additional pod level network dedicated the \ac{RDMA} communication between the nodes,
+using \textit{Multus}\footcite{multusGitHubK8snetworkplumbingwgMultuscni} and then the specific network plugin
+for the \ac{RDMA} capable network card\footcite{nvidiaNetworkOperator}.
+
+\pagebreak
+
+\subsubsection{Hardware Level Architecture}
+
+\textbf{Compute Nodes Hardware}
+\label{asp:compute_node_hardware}
+
+Regarding the hardware of the nodes making up the cluster,
+many rules which are true for \ac{HPC} systems described  in the \nameref{sec:hpc_infrastructure} section are also true for this system.
+For this system, it is important to consider factors such as the need for low latency and high bandwidth in order to facilitate efficient communication in \ac{HPC} systems.
+Additionally, the computational power should be as high as reasonably possible to handle large-scale computations effectively.
+
+In order to handle smaller scale computations which fit into a single node,
+a High core count CPU would be a good fit as well as a large amount of memory,
+which will also come in handy for the larger scale computations, as part of the \ac{PGAS}.
+
+One advantage of Kubernetes is the ability to use more heterogeneous hardware than in traditional \ac{HPC} systems.
+This allows for the use of nodes of different sizes and capabilities, optimizing the system for the specific use case while
+still using the same software stack and administration tools.
+
+Overall this part of the system is mostly governed by the budget available,
+as more powerful hardware will be able to handle larger computations faster.
+And if the use case requires specific hardware, such as \ac{GPU}s or \ac{FPGA}s,
+the system should be able to accommodate these as well.
+
+\textbf{Network Interconnect}
+\label{sec:suggarch_network}
+
+For the underlying interconnect, it is crucial to use a network that supports \ac{RDMA}. However, in cloud environments, the most common network interconnects are simple Ethernet networks,
+which do not have built-in support for \ac{RDMA}.
+While Arkouda is able to use \ac{PGAS} which can use any kind of network,
+by wrapping the communication in a higher level protocol, this is primarily for proof of concept and small scale computations,
+as resolving the communication needs to be done in the software stack,
+instead of being able to rely on the network hardware to do it for you.
+
+For this reason it would be best to use a network which supports \ac{RDMA} natively,
+such as InfiniBand or SlingShot, which are able to provide the necessary low latency and high bandwidth
+needed for \ac{HPC} systems\footcite{desensiInDepthAnalysisSlingshot2020a}.
+
+Topologically the network would differ from traditional cloud network topologies,
+which are usually less interconnect than \ac{HPC} systems,
+as a lot of the communication comes from the outside of the cluster and not between the nodes themselves.
+Our network would instead be ideally a full bisectional bandwidth network,
+where every node is connected to every other node, in order to provide the lowest latency possible.
+But more realistically a fat tree network topology would be used, just as discussed in the \nameref{sec:network_topology} section.
+
+% frontend: plain jupyter notebook
+% communication: jupyter protocol
+% backend:
+%     - infrastructure
+%       - hardware
+%         - 20 node cluster
+%         - storage system
+%       - interconnect
+%         - ethernet without RDMA
+%           - evaluation of possobilies
+%     - software
+%       - container orchestration system: Kubernetes
+%       - workload management system: Kubernetes scheduler
+%       - compute software : Arkouda/Chapl
+%       - storage software: Minio
+%       - neworksoftware: 
+
+
+% % TODO:
+% Talk about how Arkouda is an easy to use library able to provide the user with the necessary tools to perform parallel computation.
+% Talk about how Arkouda supprots PGAS under any kind of network infrastructure, even without RDMA capale interconnect
+% But if RDMA is there how container could still be used to provide the user with the necessary tools to perform parallel computation
+% (talking about namespace isolaton ...)
+% Talk about how the containers can make use of the underlying CPU architecture even in a cloud system.
+% Talk about how the container are able subdevide the resources of the underlying hardware even for multiple users.
+% Talk about alternative Kubernetes scheduling systems interlacing deployments and jobs.

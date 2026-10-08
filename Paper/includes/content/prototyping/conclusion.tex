@@ -1,0 +1,392 @@
+\section{Conclusion of the Prototyping Process}
+
+As the goal of this chapter was not just to create a usable artifact for its own right
+and explore the process of building a kubernetes-based \ac{HPC} tool,
+but also to stand as the validation step of the system designed in the \Nameref{suggested_architecture}.
+
+While each iteration of the prototyping process is split into goal, implementation, and evaluation
+sections, this section serves to do this for the process as a whole and conclude not just the prototyping process,
+but the conceptual design of the system as a whole,
+by reevaluating the original design with the insights gained from the prototyping process.
+
+
+\subsection{Summary of the Prototyping Process}
+
+Before the three iterations of the prototyping process are set up, executed and evaluated,
+the existing infrastructure, previous work, and the environment of the prototyping process are described.
+This is done to set the stage for the prototyping process, as well as to
+highlight the first differences between the suggested architecture and the prototype to be.
+This is important as the architecture is designed from a deductive standpoint,
+being a system that is supposed to be generic and not influenced by previous decisions.
+Confronting this design with the first practical steps is the first step in the validation process.
+From this the changes extensions and removals of the previous system are derived.
+
+The fist iteration (\ref{sec:iteration_no1}) of the prototyping process is to create the most basic version of the system,
+possible, to test the feasibility of the system and the environment.
+This is done by verifying the operative state of the system and the environment,
+fixing issues with the existing infrastructure.
+For the basic functionality of the system, a custom container image is created,
+containing the necessary tools and libraries to host a Notebook server.
+Using a modified \textit{Ipython} kernel, the Arkouda and Chapel libraries are
+integrated into the container which automatically connect to the compute nodes when
+activated. To make the system able to be used on the cluster a deployment and a
+service are created, to make the system accessible from the outside.
+The system is then tested by running a simple example, to verify the functionality of the system,
+some issues are then identified and workarounds are implemented to create the first working version of the system.
+
+As the first iteration  has successfully implemented a \ac{MVP} of the system,
+second iteration (\ref{sec:iteration_no2}) aims to improve the system as
+the previous version did not regard speed and stability as a priority.
+During this iteration the previously created notebook container is rebuilt in
+order to optimize the performance of the system.
+The infrastructure from the previous iteration is then given the same treatment,
+completely rebuilding the entire container images from scratch in order to
+reduce their size and to remove version mismatches in the underlying libraries.
+To measure these improvements the deployment times of the system are benchmarked.
+Additionally it was attempted to replace the \ac{CRI} with a faster \ac{HPC} oriented
+one, which was not successful due to kubernetes dropping support for the \ac{API}
+specification which the \ac{CRI} was based on.
+Even though the \ac{CRI} could not be replaced, the system was still benchmarked
+to measure the compute node's performance and to identify bottlenecks in the system
+For this purpose a simple benchmarking framework was converted to a deployment
+capable of running in a kubernetes cluster and to interact with the compute nodes
+to measure the performance of the system.
+
+The goal of the third iteration (\ref{sec:iteration_no3}) was to move the system from
+a simple proof of concept to a system which could not just technically solve \ac{HPC} problems,
+but one that is not constrained by consumer level hardware, so its performance can be
+compared to an equivalent section of a real system.
+While the previous section had the goal of implementing \textit{Singularity} to
+make use of its near native performance, it was also hoped to make use of its
+native support for \ac{IB} to make the third iteration much easier to implement.
+But as \textit{Singularity} was not supported the \ac{IB} was implemented manually
+using a multitude of different tools and configurations in order to properly provision
+and integrate the device into the Multi \ac{CNI} setup, installed to enable the usage.
+During the integration of this step the prototyping was cut short due to the time
+constraints of the thesis, leaving the \ac{IB} integration for future work.
+But as the flannel \ac{CNI} is still completely in place the system is still
+fully functional and can be used to run \ac{HPC} workloads using the \ac{TCP/IP} protocol.
+
+
+\subsection{Evaluating against the Deductively Designed System}
+
+As the prototyping process is now concluded and summarized,
+it is time to complete the validation of the deductively designed system
+and to evaluate the prototyping process against the original design;
+contrasting the theory with practical implementations, which changes
+where made out of incorrect assumptions and which where made out of necessity,
+and which are improvements of the general design.
+
+The following section will go through the different aspects defined in the
+\Nameref{suggested_architecture} and evaluate them.
+
+
+\textbf{\hyperref[asp:client]{Client}}:
+
+In the design it was assumed that the client of the user would
+be a local interface of Jupyter notebook, which would be connected to the
+server via a web interface.
+This assumption has been implemented int the prototype and even used during the
+data analysis of the prototyping process.
+Beyond having a local interface, such as a local Jupyter notebook or the \textit{VSCode} extension,
+the system can just as easily be accessed from a web browser,
+making it highly accessible and and flexible in its use.
+The original design has been validated by the prototyping process.
+
+\textbf{\hyperref[asp:language]{Language}}:
+
+In the original design it was decided to make this project Arkouda first,
+as it is a modern and easy to use way of interacting with the \ac{HPC} system.
+
+While Arkouda itself is very user friendly and easy to use, the installation,
+needing to have a precompiled Chapel version, and then manually compiling
+and importing the Arkouda library, is less so.
+
+While this made the creation of custom containers more complicated,
+form the perspective of the user, the system is now as easy to use as
+native python on any jupyter notebook server, making the system very user friendly.
+
+From the perspective of compute performance, the system was as efficient as
+the underlying infrastructure permitted, being bottlenecked by the
+networking (see \Nameref{sec:performance_testing}).
+
+There is no reason to discount the original decision to use Arkouda as the
+primary language of the system.
+
+
+\textbf{\hyperref[asp:cluster]{Cluster}}:
+
+The original design assumed that the system should be run on a Kubernetes cluster,
+while this is an integral part of the ability to scale the system,
+the prototyping has shown that Kubernetes is not build for connecting
+easily to hardware devices which are standard in \ac{HPC} environments.
+
+Integrating these devices is a major challenge and when deciding on
+building a cloud native \ac{HPC} system, it should be strongly considered
+wether a Kubernetes cluster is the right choice for the system,
+or whether the other opportunity discussed in this section should be used.
+This being the bare the orchestration of bare metal systems.
+
+So while the design inherently relies on the use of a Kubernetes cluster,
+and therefore it needs to be included in the system, this is a
+decision that should only be made if the high flexibility
+and scalability of containers is needed.
+
+\textbf{\hyperref[asp:jupyter_server]{Jupyter Server}}:
+
+The original design discuses the decision between using a simple Jupyter server
+or a whole JupyterHub setup, the prototyping process has shown that
+the setup of a single Jupyter server is sufficient for the system,
+and quite uncomplicated to set up.
+
+Orchestrating a single or a few JupyterHub in oder to manage multiple users
+would increase the complexity of the system, while the use of a single Jupyter server
+per user is a much simpler solution, which is sufficient for the current goals of the system.
+
+This decision is validated by the prototyping process.
+
+\clearpage
+
+\textbf{\hyperref[asp:compute_services]{Compute Services}}:
+
+As Arkouda was already selected the choice of compute service was obvious,
+as the Arkouda Client is build to interface with a Chapel backend, through the
+Arkouda server witch wraps the Chapel library.
+
+While the same limitations exist for the Arkouda server as for the
+Arkouda client, needing to compile Chapel and Arkouda manually, making
+an iterative development process more complicated, the experience during
+runtime is user-friendly and and relatively quick, considering the
+networking limitations of the system.
+
+The original design has been implemented as described and is a valid choice for the system.
+But further optimization of the system could be considered to ease and speed up the
+development process, as many steps of the initial setup are still required to be done manually.
+A more automated and consolidated setup would be beneficial for both the scalability and the
+maintainability of the system.
+
+Over all, the original design is validated by the prototyping process, and further potential
+has been identified.
+
+\textbf{\hyperref[asp:resource_provisioning]{Resource Provisioning / Scaling}}:
+
+Original goal of the system in the design was to dynamically scale the system,
+either on a job by job basis or by scaling the based on sessions.
+
+While the system can be rescaled via a single variable in between sessions,
+this feature has not yet been implemented deeply enough in the system.
+It's implementation during later iterations was a significant factor in the decisions
+made during the earlier stages of the prototyping process, such as setting
+up the self configuring implementation of \ac{IB}, the optimization of the container images,
+and the one notebook per user setup.
+
+While this feature has been deemed important for the system the decision to
+make all parts scalable from the beginning should be reconsidered.
+Creating a system that is at first not scalable, but completely functioning
+with all the relevant features and then optimizing the necessary parts for
+scalability. Would have resulted in more insights early on in the prototyping process,
+but would have created more work over all.
+Under the light of the time constraints of the thesis, the decision to
+prioritize the scalability in each step component of the system has lead to
+not reaching the goal of a fully scalable system, in the time frame of the thesis.
+
+Therefore, while the original design is valid, it should have been differently prioritized.
+
+
+\textbf{\hyperref[asp:operating_system]{Operating System}}:
+
+The original design assumed that the system would be run on a Linux based system,
+which is a necessary and valid assumption, for both Kubernetes and \ac{HPC} systems.
+This part is validated by the prototyping process.
+
+A second consideration was wether to use a generic Linux distribution or a specialized one,
+while the choice of a generic distribution has been sufficient for the prototyping process,
+choosing a licensed distribution specialized in this sector of Kubernetes would have
+enabled the access to more specialized support and documentation, which would have
+speed up the prototyping process significantly.
+On the other hand the use of a non generic distribution entails the reliance on
+licensed software, which would have made the system less accessible to the general public.
+And setting up the entire cluster from a blank system offers a much deeper understanding
+of the system as a whole, which is invaluable for the development of the system.
+
+Therefore both decisions are equal valid and the choice between them should be made
+depending on the goals of the developer, for a more flexible and public system a generic
+distribution would be the better choice, while for a licensed and specialized system
+will provide benefits for production systems.
+
+This decision is validated by the prototyping process.
+
+
+\textbf{\hyperref[asp:container_runtime]{Container Runtime}}:
+
+During the design phase three different container runtimes where picked out as
+possible candidates on which the system could be run.
+
+On the baseline either \ac{CRI-O} or \textit{Containerd} where considered with
+\ac{CRI-O} being the preferred choice due to its closer accordance with the
+\ac{OCI} specification.
+As an additional option \textit{Singularity} was considered as a runtime
+for the compute pods to use its performance benefits.
+
+As the previous system was already running on \textit{Containerd} and the
+benefits of \ac{CRI-O} where not significant enough to warrant the change,
+the decision was made to keep the system on \textit{Containerd}.
+Not invalidating the original proposal but diverting from it out
+of practicality.
+
+The decision to include \textit{Singularity} as a secondary runtime,
+on the other hand was inherently misinformed, as is described in the
+section \Nameref{sec:container_runtime}.
+Going down this path is not recommended, as either an unsupported version
+of Kubernetes would have to be used, or the \textit{Singularity} \ac{CRI}
+would need to be patched.
+
+In conclusion the original design is validated in regards to the base container runtime,
+but the decision to include \textit{Singularity} has been completely invalidated.
+
+\textbf{\hyperref[sec:container_image]{Container Image}}:
+
+As touched upon in the compute services section, the container images used where
+based on the ones provided in the contributions repository of the Arkouda project.
+
+While they have been an excellent starting point, the prototyping process has shown that
+the images where able to be be significantly reduced in size and optimized for the system,
+which has improved the performance of the system.
+
+One significant change needed to be made in the future is to create a set of \ac{IB}
+capable images, as this needs to be set up during compilation time and can not be
+changed during runtime.
+
+The original design has been validated by the prototyping process and has been improved upon,
+and still has potential for further improvements.
+
+\textbf{\hyperref[asp:network_abstraction]{Network Abstraction}}:
+
+During the original design the tradeoff common network abstraction layers make
+between performance and flexibility was highlighted and it was concluded that a
+multi \ac{CNI} setup would be an essential part of the system.
+
+Creating two separate network, one for the orchestrating communication, and one
+to provide the high-speed \ac{RDMA} capable communication the \ac{HPC} components
+require.
+
+It was already recognized that for this setup to work a meta \ac{CNI} such
+as \textit{Multus} would be necessary to enable the use of both networks.
+
+While the need for this system has been thoroughly shown during the prototyping process,
+and the implementation of a dual \ac{CNI} setup was has been proven as the only valid solution;
+Other solutions such as keeping the original \textit{Flannel} \ac{CNI} and
+facilitating the \ac{RDMA} communication on the container runtime level where considered but
+have been proven to be infeasible.
+
+While the original proposal on the network abstraction level has been implemented, via
+the use of a dual \ac{CNI} setup, the ramifications for the configurations of the underlying
+hardware where severely underestimated, which will be discussed in more detail in the paragraph
+\hyperref[par:network_interconnect]{"Network Interconnect"} of this section.
+
+Overall using a dual \ac{CNI} setup is a valid solution if the requirements of the system
+demand a high-speed \ac{RDMA} network, a containerized environment and a flexible communication
+infrastructure.
+
+If this is not the case, a bare metal ethernet network, running the workload directly on the system
+or a fixed network configuration should be considered instead.
+
+\textbf{\hyperref[asp:compute_node_hardware]{Compute Node Hardware}}:
+
+In the effort to create a generic design, only generic recommendations where made
+during the design phase, especially as the system, using containerization is
+largely hardware agnostic.
+
+As the network revealed itself to be the main bottleneck of the system, the
+compute and memory specification of the system did not impact the performance
+in a significant negative way.
+This is demonstrated by the fact that during the performance testing \ac{PGAS}
+memory occupation did not exceed 30\% of the available space when
+the 10Gbit network was at its maximum capacity.
+
+But nevertheless, the memory speed and capacity, as well as the \ac{CPU} performance and \ac{NUMA}
+topology of the two socket nodes would most likely be of significant importance
+after the implement of a dedicated \ac{IB} network.
+
+The other aspect discussed, being the capability of respecting non homogeneous
+systems was important during the building and testing of the network abstraction.
+Using a hardware scanning daemonsets, to identify available hardware made it
+easy to segment the deployments to either the \ac{IB} capable or in capable nodes,
+by simply stating the need in the configuration.
+
+While not proven during the prototyping process, the assumption that a
+more compute capable system would be able to handle more workloads still stands.
+On the other hand it was shown that the use of heterogeneous systems is possible,
+as special need hardware can be reserved for special workloads if needed,
+but is fully capable of running pods with on all nodes, independent of
+the underlying hardware.
+
+Validating the latter and not invalidating the former, part of the original design.
+
+\textbf{\hyperref[sec:suggarch_network]{Network Interconnect}}:
+\label{par:network_interconnect}
+
+As has previously been referenced, one of the major bottlenecks of the prototype was
+the network. This was already correctly anticipated during the design phase and
+the decision to utilize an \ac{IB} network interconnect was made.
+
+During the design phase it was assumed that the installation of the \ac{IB} network,
+would be of equal complexity as any other \ac{CNI} addon; not trivial but manageable.
+
+But this notion was shown to be incorrect, as the setup of the \ac{IB} network
+and the necessary multi layered infrastructure to configure it through Kubernetes
+was a major challenge took up a significant amount of time during the prototyping process.
+
+While the Kubernetes side of the setup has now been brought to a working state,
+the configuration of the necessary kernel modules has been cut short due to
+time constraints of the thesis.
+
+While the reason for the \ac{IB} interconnect is valid; bringing the performance from
+acceptable for medium sized workloads, to good performance for large scale \ac{HPC} workloads.
+The complexity of this setup was severely misjudged and resulted in a major disruption
+of the time schedule of the prototyping process, resulting in features not being implemented
+and the original design not being able to be fully validated.
+
+One of these features is the dynamic scaling of the system, which would have lead to
+the investigation of the need for topological awareness, which has also been discussed
+in this section of the design.
+
+While the need for a high-speed network interconnect has manifested as expected,
+the applied solution was not feasible in the time frame of the thesis.
+Instead it is recommended to either circumvent the need for a \ac{IB} integration,
+or to allot this step the necessary resources to be implemented correctly.
+This could be done by making use of enterprise support, hiring a specialist
+or allotting more time to the prototyping process.
+Regarding the network topology, no evaluation can be made, as neither
+a state in which the need could be evaluated nor a test setup has been reached.
+
+
+\textbf{Conclusion}
+
+Circling back to the original goal of the Conceptual Deductive Design,
+as defined in \Nameref{sec:goals}:
+
+\textit{\say{The designed system should provide the user with a easy to use interface,
+        capable of interactively exploring HPC scale data.
+        The system should be able to run on cloud infrastructure, be able to
+        to allocate the necessary resources, as well as scheduling and executing
+        the computation within a reasonable time frame.}}
+
+This prototyping process has shown that this goal is technically feasible,
+and has largely been achieved. While two of the design goals where based on
+incorrect assumptions, most have either been validated or even expanded
+upon during the prototyping process.
+
+These divergences between a theoretical design and the realities of an
+actual implementation, have now been either been corrected, put in
+a more appropriate context or have been proven to be based on incorrect
+assumptions.
+
+Overall the design as well as the prototyping process has been a success,
+as the central functionality of an interactive system was successfully implemented,
+but most importantly valuable insights have been gained about the prototyping process
+as well as the cavitates of a deductively designed system.
+Also a useful system has been created which was used to run the data analysis
+While there is still work to be done and much long term potential for
+the project as a whole, what has been done builds a solid foundation
+and many paths forward.

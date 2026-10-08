@@ -1,0 +1,39 @@
+\section{Exploratory Computing}
+\label{sec:EC}
+
+With the advent of Big Data, the increasing complexity and increase of easily available 
+compute resources, the field of data analysis has been under an ever-increasing pressure 
+to "make sense" of the abundant data.
+This need has given rise to the methodology of \acf{EC}, which is an iterative 
+process of data analysis which maintains a close to real-time dialogue between the
+analyst and the data\footcite{diblasExploratoryComputingDraft2014}.
+
+Unlike conventional data analysis methods which might follow a straighter path towards
+an answer to a specific question, \ac{EC} aims to be a more open-ended process, where the eventual goal is
+not just to find a numerical answer to a question but rather to gain a deeper understanding of the dataset.
+Therefore, the tools in this field require a high degree of interactivity in order to
+become a more natural extension of the analysts thought process\footcite{grangerJupyterThinkingStorytelling2021}.
+
+\textbf{Computational Notebooks}
+
+The defacto standard for scientific \ac{EC} is the \textit{Computational Notebook},
+allowing for the direct integration of narrative text, code, and it's output like visualizations, tables and other data structures.
+While in some domains other notebooks systems like \textit{Wolfram Mathematica} and \textit{Matlab} are used,
+the most common notebook especially in the field of data science is the \textit{Jupyter Notebook}\footcite{perkelWhyJupyterData2018}.
+
+\textit{Jupyter Notebooks} is a \ac{FOSS} server-(web)client application that exposes 
+an interactive editor.
+User can write code, documentation and visualizations into so-called cells. 
+These cells are then executed on the server, which can be local or a remote compute resource,
+and the output is displayed in the notebook.
+As the computational environment is preserved across cells, 
+with each cell being able to access the variables and functions defined in previous cells.
+This lends itself to the \ac{REPL} style of programming, without the need to re-run the whole script\footcite{jupyter-docsProjectJupyterDocumentation}.
+One of the key features of \textit{Jupyter Notebooks} is the ability to run code in multiple languages,
+as the server on the  backend is build on a modular architecture that allows for the integration of \textit{kernels}.
+These kernels are responsible for executing the code in the cells and returning the output to the notebook,
+but are only limited by the \ac{API} spec of the notebook server\footcite{jupyter-docsArchitectureJupyterDocumentation}.
+This has lead to a wide variety of kernels being available, with the most common ones being for \textit{Python}, \textit{R} and \textit{Julia},
+but also supporting languages which are not traditionally associated with data analysis like \textit{Postsript}, \textit{PowerShell} and \textit{Brainfuck}\footcite{jupyter-docsJupyterKernels}. 
+
+\pagebreak

@@ -1,0 +1,60 @@
+# Default values for udp-arkouda-server chart
+
+resources:
+  limits:
+    cpu: 44000m
+    memory: 220Gi
+  requests:
+    cpu:  40000m
+    memory: 200Gi
+
+######################## Pod Settings ########################
+
+imageRepository: node20.lab.example:31320
+releaseVersion: 2ak24.3ch2
+imagePullPolicy: Always
+
+################ Arkouda Driver Configuration ################
+
+server: 
+  numLocales: 4 # total number of Arkouda locales = number of arkouda-udp-locale pods + 1
+  authenticate: false # whether to require token authentication
+  verbose: true # enable verbose logging
+  threadsPerLocale: 44 # number of cpu cores to be used per locale
+  memMax: 214748364800
+  memTrack: true
+  logLevel: LogLevel.INFO
+  service:
+    type: ClusterIP # k8s service type, usually ClusterIP, NodePort, or LoadBalancer
+    port: 5555 # k8s service port Arkouda is listening on, defaults to 5555
+    name: arkouda-server # k8s service name
+  metrics:    
+    collectMetrics: false # whether to collect metrics and make them available via  k8s service
+    service:
+      name: # k8s service name for the Arkouda metrics service endpoint
+      port: # k8s service port for the Arkouda metrics s  ervice endpoint, defaults to 5556 
+      targetPort: # k8s targetPort mapping to the Arkouda metrics port, defaults to 5556
+locale:
+  appName: arkouda-locale
+  podMethod: GET_POD_IPS
+external:
+  persistence:
+    enabled: false # whether to use persistent storage
+    path: /arkouda-files # pod directory path, must match arkouda-udp-locale
+    hostPath: /mnt/arkouda # host machine path, must match arkouda-udp-locale
+  k8sHost: https://10.0.0.10:6443
+  namespace: arkouda # namespace Arkouda will register service
+  service: 
+    name: arkouda-server # k8s service name Arkouda will register
+    port: 5555 # k8s service port Arkouda will register, defaults to 5555
+metricsExporter:
+  imageRepository: bearsrus
+  releaseVersion: v2023.05.05 # prometheus-arkouda-exporter release version
+  imagePullPolicy: IfNotPresent
+  service:
+    name: # prometheus-arkouda-exporter service name
+    port: 5080 # prometheus-arkouda-exporter service port, defaults to 5080
+  pollingIntervalSeconds: 5
+secrets:
+  tls: arkouda-tls # name of tls secret used to access Kubernetes API
+  ssh: arkouda-ssh # name of ssh secret used to launch Arkouda locales

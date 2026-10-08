@@ -1,0 +1,306 @@
+\chapter{Summary and Outlook}
+\label{summary}
+
+With each section of this thesis now complete it is time to take
+a step back and consider the work from a broader perspective,
+reflecting on what was achieved, how it was achieved,
+and what this means for the future.
+
+First the work done in this thesis will be summarized on a high level.
+Then the questions raised in the introduction will be answered and
+the contributions of this thesis will be outlined.
+Afterwards the work done, and the choices made during this project will
+be reflect on.
+Finally, the outlook will be given, discussing the steps following
+the completion of this thesis and the future work to be done.
+
+\section{Summary}
+
+
+%  rehashin the goals, the problem and the contributions we aim to make
+
+
+
+\textbf{Introduction:}This research project was inspired by the need for a user-friendly way to interact with
+\ac{HPC} systems, which themselves should be easy and quick to create.
+The need for an interactive environment being driven directly by the shortcomings of an earlier project.
+This being a pipeline driven \gls{GitOps} system which automatically schedules \ac{HPC} workloads on a Kubernetes cluster.
+As the jobs are scheduled by the pipeline, which is being build by committing to a git repository,
+this system lacked the interactivity needed to develop the pipeline code.
+For this reason the goal for this project was to create a user-friendly way,
+to enable the user to interact with the \ac{HPC} system in a more direct
+% to do the exploitative computing needed for the development of the pipeline code
+% or one off jobs which do not need to be run in the pipeline.
+Based on this problem the problem statement,
+research questions and the contributions of this thesis were defined.
+
+
+\textbf{Methodology: }To solve this problem which exists in the intersection the \ac{HPC} and \ac{CC} worlds,
+which are both highly complex and specialized fields,
+a combination of methodologies was chosen which on one hand allows for a deep
+understanding of the theoretical background and on the other hand contrasts
+this with a practical implementation.
+
+For this reason a conceptual deductive Analysis was chosen, in order
+to derive a design from the theoretical background and the requirements from the problem statement.
+This is done by starting as close to the first principles of the
+technologies involved as possible and then working towards the higher levels required for the implementation.
+
+To prove or invalidate this hypothesis of a system design it was
+decided to implement the as a prototype in a series of iterations and
+then evaluate the results of these iterations against the design and the theoretical background. \
+
+% - theory
+%  - how cloud works
+%     how isolation works, 
+%     - this is important to understand the context of container,
+%     - the subject of kvm shows up again with \ac{SRIOV}
+
+%     how this evolved into containers and how those work
+%     - this is importat to under stand what to do in the protyping
+%     - understanding the cgroups and capabiliets was also important for understanding 
+%     how to set up the containers for SRIOV
+%     - the knowledge gainded of container runtimes and images helped to during the second iteration
+
+\pagebreak
+
+
+\textbf{Theoretical Work - Cloud:} The theoretical work started with the foundations of the \ac{CC} world.
+Beginning with the basics of process and systems isolation and how they are achieved in practice.
+Starting at \ac{KVM} and their ability to access some of the hardware directly,
+did not only provide insight into the predecessor of containers but also into the features
+which became important later during the use of \ac{SRIOV} devices.
+The inner workings of containers and their implementation in the Linux kernel were addressed next,
+as well as how container runtime and their images work.
+Bringing valuable insight especially useful during the second stage of the prototype.
+
+% - how kubernetes works is of selv evident importance for the project
+% how the networking does even more so
+% but the scheduling processes where inteded for the 4th iteraton which did not come to pass
+
+Expanding from containerization to the concepts of Kubernetes,which first where explained on an architectural level,
+and then on a networking level Information which served as the basis for each of the iterations.
+The final section, explaining the scheduling and topology considerations of Kubernetes where intended as basis
+for the fourth iteration and included in the design of the system, but where not implemented due to time constraints.
+
+\textbf{Theoretical Work - HPC:} Having established the theoretical background of the \ac{CC} world,
+the background of the \ac{HPC} world was addressed next.
+Once again starting of with the very basics, the distributed processing and relevant
+hardware infrastructure, in order to establish the context for the relevance of Memory architectures.
+As the problems of \ac{HPC} are much closer to the hardware than the typical \ac{CC} applications,
+this knowledge is essential to understand the way these system allocate and access memory as this
+builds the foundation of more complex memory architectures like the \ac{PGAS} model relying
+on a \ac{NUMA} like architecture of over the network memory access.
+Leading into the explanation of network interconnects and fabrics and the place
+they hold through the \ac{RDMA} and \ac{MPI} protocols.
+From there the complex network topologies, common in the \ac{HPC} world to reduce cost and
+increase performance where explained.
+Finally these concepts are tied together with an overview of the most relevant software stack components
+from the \ac{OS} to \textit{Workload Management Systems} are presented.
+
+% - how hpc works 
+%     as hpc has been evolving in paralel to other compute technologuies,
+%         it is important to understand the considerations and problems these systeems
+%         face and solve. 
+%     - Processing and the basics of distributed processing is explained
+%     - then memory placement and and the problems of distributed memory are explained resulting in
+%     an explanation of the \ac{PGAS} model which esenntialy relies on NUMA on steroids over the network
+%     - the netwok interconnects are explained in detail, as they are one of the most important parts of an hpc system
+%     - then Topologies are explained, which would have become important later
+%     - then a short overview of the software stack is given, which is important to understand the context of the chapel language
+%     - then workload management systesms are explained to contrast the kubernetes scheduler
+
+\textbf{Theoretical Work - Exploratory Computing:} Last but not least some of the theoretical background of
+the current state of the art in exploratory computing was presented.
+A field which is highly influenced by the computational notebook paradigm,
+which is a way to combine code, documentation and data visualization in a single document,
+which has become very popular in the data science community and
+many other fields where exploratory computing is done.
+%     - a short overview of exploratory computing and notebooks is given
+
+
+% - practice 
+%     - desing of the system
+%         - the problems from the begining are converted into a goal of a system
+%         - based on the information gathered in the previous chapters the requirements to achieve this goal are derived
+%         - upon a these requirements a design is constructed, going through each of the segments discussed in the theoretical chapters
+%           and a design decision is made based on that information
+
+\textbf{Experimental Work - Design:} With the theoretical background established the design of the system could be derived.
+Starting with the problem statement from the introduction the goals for the design where derived.
+These goals where then used to inform the requirements for the system and a design was constructed based on these requirements.
+The design itself was broken into each of the segments discussed in the theoretical chapters and at each steps
+a design decision was made based on the information gathered in the theoretical chapters.
+
+
+% - aritfact creation 
+%     - first the theroetical achritecture gets mapped to  the realities of this prototype and the previous work this builds on
+%     - an evaluation of which elements of the previous work fit the constucted design and which do not is made
+%     - the iterative development starts each iteration serving as a the basis for the next and informes the design of the next
+
+
+\textbf{Experimental Work - Artifact Creation:} Before this design was implemented as a prototype,
+the theoretically designed system which was targeted to be a general design with as little influence form previous work as possible,
+was mapped to the practicalities of the environment the prototype was to be implemented in, discussing the previous work.
+the existing infrastructure and how this translates to the design of the system to be implemented.
+
+% - creating a full blown MVP of the system including fixes and the building, setup and integration of all new components
+% - the quick and dirty MVP is then rebuild from scratch in order to create a more performant and resonsive system, 
+%   additionally a performance meassurment is integrated and it is attempted to integrate the singularity \ac{CRI} which
+%   only now reveals itself as as an impossibility
+% - the third iteration then aims to integrate infiniband infrasturcture to eliminate the bottleneck of the network
+%   integrating the whole networkstack using a fully automated configuration setup of the interface device driver and 
+%   network stack results in running out of time before it could be concluded or tested 
+
+\textbf{Experimental Work - Iterative Development:} With the actual environment established the iterative development of the prototype
+was started. Each iteration setting a goal based on the design and the previous work, describing the implementation of these goals,
+mentioning mayor problems and solutions found during the implementation and evaluating the results of each step.
+The fist iteration started of by implementing a \ac{MVP} of the system, integrating the all the software components needed for the system to work.
+During the second iteration the all containers of the system where rebuild from scratch to create a more performant and responsive
+system, and converting the benchmarking system of Arkouda so it could be used to evaluate the performance of Kubernetes
+cluster. Additionally it was attempted to integrate the \ac{CRI} of Singularity, which only then revealed itself as not feasible.
+The third iteration aimed to replace the networking layer with a fully automated multi \ac{CNI} setup,
+enabling the worker nodes to communicate more efficiently with the \ac{IB} network,
+in order to eliminate the bottleneck discovered in the second iteration.
+This last iteration, while in the final stages could not be completed due to time constraints.
+The topics of dynamics autoscaling and cluster topography, while in the original design, where not implemented due the
+same time constraints.
+
+\textbf{Experimental Work - Evaluation:} With the development process concluded,
+the final step of the deductive design process was to contrast the deductive design with the discoveries made during the
+experimental work. This was done by going through each of the design decisions made in the theoretical design and
+evaluating them separately against the results of the experimental work.
+Validating, correcting or invalidating each of the design decisions based on the new information gathered during
+the prototyping process and determining which changes made during the prototyping process would be necessary to
+an unrelated implementation and which where only necessary due to the specific constraints of the prototype.
+% - this brings and end to the iterative process, preventing the implementation of the other subjects set up in
+%   theory and design.
+
+% - the iterations are concluded with a summary of the process 
+% - and once again each part of the system design is rehashed and the final system is used to map the decisions 
+%     made in the theoretical architecture against a real world implementation
+% - the whole 
+
+\pagebreak
+
+\subsection{Contributions}
+
+With the work on this thesis now concluded,
+the contribution of this thesis can be summarized and the research questions answered.
+
+% - answering the research questions
+\subsubsection{Research Questions}
+First of lets summarize the answer this thesis has given to the research questions:
+
+\begin{itemize}
+    \item \textbf{RQ1:} \textit{
+              How can the system be extended to allow for a real-time explorative workflow, allowing for an interactive exploration of \ac{HPC} scale data?
+          }
+    \item \textbf{Answer:} Within this thesis an interactive interface for an Arkouda based Compute Cluster was designed and created as an artifact.
+          By way of confirming and correcting the original deductive design with the knowledge gained during an experimental implementation,
+          a new design was created which describes how such a system can be implemented in detail. The main components being a
+          computational notebook interfacing with a worker fleet of Arkouda workers running on a Kubernetes cluster, communicating over
+          \ac{PGAS} and if possible utilizing \ac{RDMA} protocols.
+    \item \textbf{RQ2:} \textit{
+              How can such a system be designed to combine the performance of \ac{HPC} with the flexibility and convenience of \ac{CC} systems?
+          }
+    \item \textbf{Answer:} During the theoretical and experimental work the set of design decisions and tradeoffs needed to move towards such a
+          system where described.
+          The most significant factors being that while containerized systems have near native performance in computation, they suffer form
+          a highly complex stack. In order to reach the performance of \ac{HPC} systems the network stack needs to be replaced
+          with a more performant one, creating a highly complex system in order to be able to use the \ac{HPC} interconnect in a flexible
+          and convenient way. The main tradeoffs of such a system being the complexity of the system and the performance of it.
+          For more details on the design decisions and tradeoffs necessary see the evaluation section.
+
+\end{itemize}
+
+\subsubsection{Artifacts}
+
+The direct contributions to the larger field of \ac{HPC} and \ac{CC} are as follows:
+
+\begin{itemize}
+    \item \textbf{C1:} \textit{ A deductive analysis of the three intersecting fields of \ac{HPC}, \ac{CC} and \ac{EC} has been created and experimentally validated.}
+    \item \textbf{C2:} \textit{ A design for a user friendly and scalable HPC environment on kubernetes has been created and experimentally validated.}
+    \item \textbf{C3:} \textit{ A tangible artifact in form of an integration of Arkouda, Jupyter and Kubernetes has been created and made available as a software project.}
+\end{itemize}
+
+The work done in this thesis is a step towards a user friendly and scalable \ac{HPC} environment over all.
+As this system integrates with the Pachykouda project, a significant progression towards an easy
+to use and scale HPC environment has been made.
+Allowing the a user friendly development of pipelines,directly developed on the same system as they will be run on,
+and can be directly committed to the pipeline repository local to the system, also using the same data source and storage
+as used by the pachyderm platform.
+
+Some of the optimization of the system, like the optimization of the images will also be
+useful for the Pachykouda project but might also be useful upstream in the Arkouda project.
+
+\section{Reflection}
+
+
+\subsection{Methodology}
+
+The dual methodology of combining the \ac{CDA} with \ac{RAD} has proven to be a good choice for this project.
+While the \ac{CDA} provided a deep understanding of the theoretical background and an academic approach to the problem,
+the \ac{RAD} on the other hand allowed for a fast and engineering based approach to the problem, of creating an experimental system.
+Both in conjunction provided a very useful synergy between them, making the project both deep and practical at the same time.
+But the practical challenges encountered, particularly in integrating InfiniBand within Kubernetes,
+also show that creating and estimating the complexity of such a system is not early done from literature alone.
+The need to crate the theoretical underpinning before the practicalities of the system can be understood,
+makes it easy to research and describe topics which will only be tangentially relevant to system eventually created.
+
+\subsection{Execution}
+
+The execution of the project was done by creating a theoretical foundation, a design and then implementing this design as a prototype.
+During the theoretical work a large focus where put on the theoretical underpinnings of the highly complex
+distribute systems and the \ac{EC} where reduced to a short description of the computational notebook paradigm.
+The same can be said for the practical implementation, where the focus was on the integration of \ac{HPC} paradigms into a \ac{CC} system,
+while low hanging fruit of the user facing aspects of the system where not explored in depth.
+Integrations which could have provided important usability features, like a direct integration with the version control system or
+the available block storage of the existing system in order to move away from a totally ephemeral environment where not explored,
+even though the infrastructure was already in place to do so.
+
+\subsection{Results}
+
+In the end the crated artifact is fairly complete and fully usable.
+The system is able to run Arkouda code on a Kubernetes cluster, with a Jupyter notebook interface,
+and has been used personally to do data analysis on small data analysis tasks, by the author out
+of convenience.
+So while the sudden end of the project due to time constraints is unfortunate especially
+as the last iteration was only one or two days away from completion, the results of the project are still a success.
+
+
+\section{Outlook}
+
+As the project itself has shown much potential and a solid foundation has been laid,
+there are many ways to continue the work done in this thesis.
+The most immediate step would be to offer the improvements of the components
+created in this thesis to the Arkouda community.
+% - based on the work already done a pull request to the arkodua contrip repository will be made in the near future
+% - basis for a new arkouda-contrip repo, supporting ib-kubernetes
+
+\subsection{Future Work}
+\label{sec:future_work}
+
+The most immediate steps which still needs to be worked on is to complete the last iteration of the project.
+As the work is mostly done and the integration of the InfiniBand network stack has been of intersecting to
+the Arkouda community before.
+Based on this system the performance comparison between the baseline established during the second iteration
+and the new system can be made, to see if the performance of the system has improved as expected.
+
+In regards to iterations not started yet, the dynamic autoscaling of the system would be a logical and
+interesting next step. Both as a good way to reduce cost and increase the peak performance of the system,
+but also as a way to further explore the Kubernetes system and its capabilities out of personal interest.
+
+Of a high academic ss well as practical and personal interest would be the use of an
+externalized global memory bank for the Arkouda workers to use as a collaborative memory space.
+A solution like a \ac{FAM} system has the potential to increase the performance beyond a fully
+node based \ac{PGAS} system.
+
+Additionally this project will be continued in the context of the Hewlett Packard Labs internships,
+where aspects such as an optimized memory allocation strategy of the Arkouda workers will be explored
+by fellow students furthering the research and impact of this project.
+
+\subsection{Conclusion}
+
+In conclusion there while the results of this project where a success,
+there is still much that can be explored and investigated in the field of \ac{HPC} and \ac{CC} systems.
